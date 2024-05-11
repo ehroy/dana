@@ -43,8 +43,6 @@ var sleep = require("delay");
           chalk.greenBright(`Try To Create With Number [ ${number} ]`)
       );
       browser = await puppeteer.launch({
-        executablePath:
-          "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         ignoreDefaultArgs: ["--enable-automation"],
         userDataDir: "dana",
         headless: false,
@@ -87,7 +85,6 @@ var sleep = require("delay");
       const time = { visible: true, timeout: 0 };
       const pages = await browser.pages();
       const page = pages[0];
-
       await page.goto(
         "https://m.dana.id/d/portal/oauth?acqSiteId=1022188000000000001&bindDanaType=gn&clientId=305XSM22SG0ASM05&mcc=7829&merchantEngName=iQIYI&merchantId=2188120002160083&merchantName=IQIYI&netAuthId=2022053019074400000520003395710&paySiteId=1022166000000000001&redirectUrl=https%3A%2F%2Fpay.iq.com%2Fpay-product-international%2Falipayams%2FauthResult%3Flocal_lang%3Did_id%26paymentRequestId%3D2022053095000168090%26sign%3Dc8b10822c13fcdda53b4e26cf8a56566&scopes=AGREEMENT_PAY&state=2022053095000168090&terminalType=APP&signature=I7BRjXIzP3udyJAKw9p45zuJah%2Bn%2B2tCBwEGAK1GTxWLBYPvdC9xalXORQTx2bKJehu%2BMv5lVHKLbU2iTNRqE2poV8Ul6Rqoszr%2B98R13YULvhilNFo8eL2NvBUNPEq6cqS1qbD0Prun%2FVPdvfwKSXF6SE9gC12Y3POMsmP2aXNW2op3%2BkL7gD3ymIADs%2FvPhN1RSxOIku08hyho0RKf193Y1ehnPFk1IwxuBtTk1ga0vLvBGlu%2Fm9UIpSrhWUAldUMNzkaxCuPY0WyxAEMyzrYmVrsLbUPOIH6xmd66ERE6ARSBMx60GEjX%2BqDMKSKl3EqQG5x5ZTPk8IASCtkveQ%3D%3D&_branch_match_id=1317667870160847986&_branch_referrer=H4sIAAAAAAAAA22S246iQBCGn0buxumDtLCJ2aCiwyiI4HFvJi200iNnGkSffhs3O7ubLGkS4P%2Br6qsqIiHy6tvra8zTaz%2BkKe3z8PXE0%2FA7DQqfC2aFIwgQgpoG%2FlxQ6SxTad%2Fccza6pEoQc5YKacZAPfg2Qv4cGL4NVCUJgtFQQ7qSsDKIaCrM9OLQhI342jpaX19laFcEIpkeQQKAhr%2B0p9162lMmjFpEnVtSARUDqIPhYPDEUrtgjHV1CIGS0%2Fvf%2FIT8w1%2BykJcsENsyHkXdDHrY6KGZPDKuz4t%2BkCW%2FXl7yMgvrQLzwVLAypYJnKY2lRmMuZZpU3bNk8lhVx6KHZ3EW0Pgjpumlh6c8%2FOBhDxFpTeSEPFbUrJLdSul3B7raIREN6EAaK35JpRhoJwg0hAKIz0EYUhWfBgyR4KxRlaiEKFWQ5awaGXPPNG3T2Xy4xlGpBBVs9J%2FEimRPuAR%2FLsxwXaWrQ0VdyskOx97nwXq4uA7v78bipucD9VG%2F06iHxqm8kZiMb%2BbcWMD5pt0vx0e3CSd6S%2BPDyltvWnRavLOolka7UePd22J52iK%2BcbzCRHm207Yx8YqsepTSoWsexMftsol47MwyjS2R04y3jmsWRP5wsDhNgVvWsups54bN%2BbbwDzPim%2FplAtERuyu7SlxED84eZTmWCa%2FL4WWK74llTLtFNG7kQM9vV9a1Blp0jzLgLc5Qx0fIotSdXaF1a%2Bux2FzhhYJm2YznsSSfJfrWyv0y2m%2BNONzazuNK20ntHsH%2B3hqmfX%2BUx2RXVrIzd2W9kTYJCTE9kxieP7ZbAubm50HSFFN74S9ibBbrudqqPzbuVbMMfyKuDVvLrcrzEyFONu1yAwAA",
         {
@@ -197,13 +194,18 @@ var sleep = require("delay");
           pin
         );
         await sleep(5000);
-
+        let final;
+        do {
+          final = await page.url();
+          await sleep(2000);
+        } while (final.includes("dana"));
         fs.appendFileSync("acountdana.txt", `${number}|${pin}\n`);
       } catch (error) {
         console.log(
           chalk.yellowBright(`[ INFO ] `) +
             chalk.redBright("Dana Mungkin Sudah Terdaftar")
         );
+        await sms.setStatus(id, 8);
       }
     } catch (error) {
       await sms.setStatus(id, 8);
