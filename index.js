@@ -149,7 +149,7 @@ var sleep = require("delay");
         do {
           otpCode = await sms.getCode(id);
           // console.log(otpCode);
-          if (count === 360) {
+          if (count === 60) {
             await sms.setStatus(id, 8);
           }
           await sleep(1000);
