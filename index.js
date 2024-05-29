@@ -127,7 +127,7 @@ var sleep = require("delay");
         await page.click(
           "#app > div > div > div.ipg-new__wrapper > div.ipg-new__content > div > div:nth-child(7) > div.f-dialog.wrapper--desktop > div.f-dialog__container > div > div > div.f-card__actions.unregistered-number__action > button.btn-register-pop-up.f-btn.f-btn-primary.f-btn-large"
         );
-        await sleep(62000);
+        await sleep(63000);
         console.log(
           chalk.yellowBright(`[ INFO ] `) +
             chalk.greenBright("Done Sleep 60 Sec")
