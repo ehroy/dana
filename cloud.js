@@ -6,7 +6,7 @@ const stealthPlugin = require("puppeteer-extra-plugin-stealth")();
 const fs = require("fs-extra");
 puppeteer.use(stealthPlugin);
 const chalk = require("chalk");
-const SMSActivate = require("./lib/index");
+const OTP = require("./lib/adaotp");
 var sleep = require("delay");
 
 (async () => {
@@ -16,28 +16,27 @@ var sleep = require("delay");
   let sms;
   while (true) {
     try {
-      sms = new SMSActivate(apikey, "smshub");
-      const balance = await sms.getBalance();
-      console.log(
-        chalk.yellowBright(`[ INFO ] `) +
-          chalk.greenBright(`Saldo SMSHUB ${balance} руб`)
-      );
-
-      let data;
-      try {
+        var sms = new OTP(apikey);
+        let data;
         do {
-          data = await sms.getNumber("fr", 6, "axis");
-        } while (data === null);
-      } catch (err) {
-        console.log(
-          chalk.yellowBright(`[ INFO ] `) +
-            chalk.redBright(`Gagal Mendapatkan Nomer ${err}`)
+          try {
+            await delay(1000);
+            data = await sms.GetNumber("1");
+          } catch (err) {
+            console.log(
+              chalk.yellowBright(`[ INFO ] `) +
+                chalk.redBright(`Gagal Mendapatkan Nomer ${err}`)
+            );
+            await delay(5000);
+            continue;
+          }
+          await delay(5000);
+        } while (
+          data.data.messages ===
+          "This Services is out of stock, Please try again in 30 seconds"
         );
-        await sleep(5000);
-        continue;
-      }
-      var { id, number } = data;
-      await sms.setStatus(id, 1);
+        // console.log(data);
+        let { order_id, number } = data.data.data;
       console.log(
         chalk.yellowBright(`[ INFO ] `) +
           chalk.greenBright(`Try To Create With Number [ ${number} ]`)
@@ -145,37 +144,46 @@ var sleep = require("delay");
         });
 
         let otpCode;
-        let count = 0;
-        do {
-          otpCode = await sms.getCode(id);
-          // console.log(otpCode);
-          if (count === 60) {
-            await sms.setStatus(id, 8);
-          }
-          await sleep(1000);
-          count++;
-          // console.log(otpCode);
-        } while (otpCode === "STATUS_WAIT_CODE");
-        if (otpCode === "STATUS_CANCEL") {
-          console.log(
-            chalk.yellowBright(`[ INFO ] `) +
-              chalk.redBright("Cancel Phone Number")
-          );
-          continue;
-        } else {
-          const otp = otpCode.replace(/[^0-9]+/g, "").slice(0,4);
-          console.log(
-            chalk.yellowBright(`[ INFO ] `) +
-              chalk.greenBright("SMS OTP : " + otp)
-          );
-        }
+            let count = 0;
+            do {
+              try {
+                otpCode = await sms.GetMessage(order_id);
+                // console.log(otpCode.data.data);
+                if (count === 60) {
+                  await sms.GetCancel(order_id)
+                }
+                await delay(1000);
+                count++;
+              } catch (error) {
+                break;
+              }
+            } while (
+              otpCode.data.data[0].sms === null ||
+              otpCode.data.data[0].sms === "null" ||
+              !otpCode.data.data[0].sms
+            );
+            if (otpCode.data.data[0].status === "0") {
+              console.log(
+                chalk.yellowBright(`[ INFO ] `) +
+                  chalk.redBright("Cancel Phone Number")
+              );
+              continue;
+            } else {
+              const fixotp = otpCode.data.data[0].sms;
+              const parse = JSON.parse(fixotp);
+              var otp2 = parse[0].sms.replace(/[^0-9]+/g, "");
+              console.log(
+                chalk.yellowBright(`[ INFO ] `) +
+                  chalk.greenBright("SMS OTP : " + otp2)
+              );
+            }
         await sleep(1000);
         await page.waitForSelector(
           "#app > div > div > div.ipg-new__wrapper > div.ipg-new__content > div > div.card-agreement > main > div > div > div.risk-otp-content.text-center > div > div > div:nth-child(1)"
         );
         await page.type(
           "#app > div > div > div.ipg-new__wrapper > div.ipg-new__content > div > div.card-agreement > main > div > div > div.risk-otp-content.text-center > div > div > div:nth-child(1)",
-          otpCode.replace(/[^0-9]+/g, "").slice(0,4)
+          otpCode
         );
         await sleep(1000);
         await page.waitForSelector(
